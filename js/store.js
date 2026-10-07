@@ -1,5 +1,10 @@
+import { getSampleTasks } from './sampleData.js';
+
 const STORAGE_KEY = 'pomodoro-kanban';
 const SCHEMA_VERSION = 1;
+const STATUSES = ['todo', 'doing', 'done'];
+
+const now = () => new Date().toISOString();
 
 function createDefaultState() {
   return {
@@ -10,20 +15,51 @@ function createDefaultState() {
   };
 }
 
-function load() {
+function createTask({ title, status = 'todo', order = 0, dueDate = null, dueTime = null, subtasks = [] }) {
+  const timestamp = now();
+  return {
+    id: crypto.randomUUID(),
+    title,
+    status,
+    order,
+    dueDate,
+    dueTime,
+    alarmAt: null,
+    alarmFired: false,
+    subtasks,
+    collapsed: false,
+    // 완료 직전의 하위 할일 체크 상태 { [subtaskId]: boolean }. 완료 해제 시 복원에 쓴다
+    subtaskStateBeforeDone: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    completedAt: status === 'done' ? timestamp : null,
+  };
+}
+
+function createSampleState() {
+  const columnCounts = { todo: 0, doing: 0, done: 0 };
+  const tasks = getSampleTasks().map((sample) =>
+    createTask({
+      ...sample,
+      order: columnCounts[sample.status]++,
+      subtasks: (sample.subtasks ?? []).map(([title, done]) => ({ id: crypto.randomUUID(), title, done })),
+    })
+  );
+  return { ...createDefaultState(), tasks };
+}
+
+function normalize(saved) {
   const defaults = createDefaultState();
+  return { ...defaults, ...saved, settings: { ...defaults.settings, ...saved.settings } };
+}
+
+function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaults;
-    const saved = JSON.parse(raw);
-    return {
-      ...defaults,
-      ...saved,
-      settings: { ...defaults.settings, ...saved.settings },
-    };
+    return raw ? normalize(JSON.parse(raw)) : createSampleState();
   } catch (error) {
     console.error('저장된 데이터를 불러오지 못했습니다.', error);
-    return defaults;
+    return createDefaultState();
   }
 }
 
@@ -38,8 +74,6 @@ function commit() {
   }
   listeners.forEach((listener) => listener());
 }
-
-const now = () => new Date().toISOString();
 
 function findTask(id) {
   return state.tasks.find((t) => t.id === id);
@@ -71,22 +105,7 @@ export function getTasksByStatus(status) {
 }
 
 export function addTask(title, status = 'todo') {
-  const timestamp = now();
-  state.tasks.push({
-    id: crypto.randomUUID(),
-    title,
-    status,
-    order: nextOrder(status),
-    dueDate: null,
-    dueTime: null,
-    alarmAt: null,
-    alarmFired: false,
-    subtasks: [],
-    collapsed: false,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    completedAt: status === 'done' ? timestamp : null,
-  });
+  state.tasks.push(createTask({ title, status, order: nextOrder(status) }));
   commit();
 }
 
@@ -97,15 +116,48 @@ export function updateTask(id, patch) {
   commit();
 }
 
+// 체크박스 · 메뉴 · 드래그 모두 이 함수를 거쳐 상태가 바뀐다
+function applyStatus(task, status) {
+  const done = status === 'done';
+
+  if (done) {
+    task.subtaskStateBeforeDone = Object.fromEntries(task.subtasks.map((s) => [s.id, s.done]));
+    task.subtasks.forEach((s) => (s.done = true));
+  } else if (task.subtaskStateBeforeDone) {
+    // 기록에 없는 항목(완료 중에 추가했거나 직접 체크를 바꾼 것)은 현재 상태를 유지한다
+    const before = task.subtaskStateBeforeDone;
+    task.subtasks.forEach((s) => {
+      if (s.id in before) s.done = before[s.id];
+    });
+    task.subtaskStateBeforeDone = null;
+  }
+
+  task.status = status;
+  task.completedAt = done ? now() : null;
+  task.updatedAt = now();
+}
+
 // 완료로 보낼 때는 맨 위(최근 완료 순), 나머지는 맨 아래에 놓는다
 export function changeStatus(id, status) {
   const task = findTask(id);
   if (!task || task.status === status) return;
-  updateTask(id, {
-    status,
-    order: status === 'done' ? topOrder('done') : nextOrder(status),
-    completedAt: status === 'done' ? now() : null,
+  task.order = status === 'done' ? topOrder('done') : nextOrder(status);
+  applyStatus(task, status);
+  commit();
+}
+
+export function moveTask(id, toStatus, toIndex) {
+  const task = findTask(id);
+  if (!task) return;
+
+  if (task.status !== toStatus) applyStatus(task, toStatus);
+
+  const column = getTasksByStatus(toStatus).filter((t) => t.id !== id);
+  column.splice(toIndex, 0, task);
+  column.forEach((t, index) => {
+    t.order = index;
   });
+  commit();
 }
 
 // 접기/펼치기는 화면 설정이라 updatedAt을 바꾸지 않는다
@@ -126,10 +178,13 @@ export function addSubtask(taskId, title) {
 }
 
 export function updateSubtask(taskId, subtaskId, patch) {
-  const subtask = findTask(taskId)?.subtasks.find((s) => s.id === subtaskId);
+  const task = findTask(taskId);
+  const subtask = task?.subtasks.find((s) => s.id === subtaskId);
   if (!subtask) return;
   Object.assign(subtask, patch);
-  findTask(taskId).updatedAt = now();
+  // 완료 상태에서 사용자가 직접 체크를 바꾸면, 완료 해제 시 그 선택을 존중한다
+  if ('done' in patch && task.subtaskStateBeforeDone) delete task.subtaskStateBeforeDone[subtaskId];
+  task.updatedAt = now();
   commit();
 }
 
@@ -138,24 +193,6 @@ export function deleteSubtask(taskId, subtaskId) {
   if (!task) return;
   task.subtasks = task.subtasks.filter((s) => s.id !== subtaskId);
   task.updatedAt = now();
-  commit();
-}
-
-export function moveTask(id, toStatus, toIndex) {
-  const task = findTask(id);
-  if (!task) return;
-
-  if (task.status !== toStatus) {
-    task.completedAt = toStatus === 'done' ? now() : null;
-    task.status = toStatus;
-    task.updatedAt = now();
-  }
-
-  const column = getTasksByStatus(toStatus).filter((t) => t.id !== id);
-  column.splice(toIndex, 0, task);
-  column.forEach((t, index) => {
-    t.order = index;
-  });
   commit();
 }
 
@@ -177,4 +214,31 @@ export function clearDoneTasks() {
 export function restoreTasks(tasks) {
   state.tasks.push(...tasks);
   commit();
+}
+
+export function exportState() {
+  return structuredClone(state);
+}
+
+function validateBackup(data) {
+  if (!data || !Array.isArray(data.tasks)) throw new Error('할일 목록(tasks)이 없습니다.');
+  if (data.schemaVersion > SCHEMA_VERSION) throw new Error('더 최신 버전에서 만든 백업입니다.');
+  const valid = data.tasks.every(
+    (t) =>
+      typeof t?.id === 'string' &&
+      typeof t.title === 'string' &&
+      STATUSES.includes(t.status) &&
+      typeof t.order === 'number' &&
+      Array.isArray(t.subtasks)
+  );
+  if (!valid) throw new Error('할일 데이터 형식이 올바르지 않습니다.');
+}
+
+// 전체 데이터를 교체하고, 되돌리기용으로 이전 데이터를 반환한다
+export function importState(data) {
+  validateBackup(data);
+  const previous = state;
+  state = normalize(structuredClone(data));
+  commit();
+  return previous;
 }
