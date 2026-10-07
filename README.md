@@ -3,6 +3,8 @@
 할일을 칸반 보드로 관리하고, 독립된 뽀모도로 타이머로 집중 시간을 관리하는 웹 앱입니다.
 백엔드 없이 브라우저만으로 동작하며, 모든 데이터는 LocalStorage에 저장됩니다.
 
+**🔗 배포 링크: https://pickthetree.github.io/PKT_claude-code/**
+
 ## 📋 주요 기능
 
 ### 1. 할일 관리
@@ -159,7 +161,7 @@ Settings {
 - [ ] 3단계: 뽀모도로 타이머 + 원형 다이얼
 - [ ] 4단계: 할일별 알람 + 브라우저 알림
 - [ ] 5단계: 다크모드 + 반응형 다듬기
-- [ ] 배포: GitHub Pages
+- [x] 배포: GitHub Pages
 - [ ] 마무리: Tailwind Play CDN → Tailwind CLI 빌드로 전환 (운영 환경 경고 제거)
 
 ### 향후 확장 (검토 중)
