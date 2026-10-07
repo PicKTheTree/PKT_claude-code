@@ -1,124 +1,170 @@
 # 🍅 뽀모도로 칸반보드 (Pomodoro Kanban Board)
 
-순수 웹 기반의 작업 관리 시스템으로, 할일 목록과 뽀모도로 타이머, 알람 기능을 통해 생산성을 향상시키는 도구입니다.
+할일을 칸반 보드로 관리하고, 독립된 뽀모도로 타이머로 집중 시간을 관리하는 웹 앱입니다.
+백엔드 없이 브라우저만으로 동작하며, 모든 데이터는 LocalStorage에 저장됩니다.
 
 ## 📋 주요 기능
 
-### 핵심 요구사항
-1. **할일 관리**
-   - 할일 추가/수정/삭제
-   - 하위 할일(Sub-task) 추가 및 관리
-   - 우선순위 설정
-   - 상태 관리 (TODO, 진행 중, 완료)
+### 1. 할일 관리
+- 칸반 3컬럼: **할 일 / 진행 중 / 완료**
+- 할일 추가 · 인라인 편집 · 삭제(되돌리기 토스트 지원)
+- 마감일 설정 (날짜 + 선택적 시간, 기본값은 오늘, 지난 마감일 강조)
+- 지난 마감일 개수 배지 (할 일 / 진행 중 컬럼 헤더)
+- 원형 체크박스로 완료 처리 → 완료 컬럼 맨 위로 이동, 체크 해제 시 할 일 컬럼으로 복귀
+- 완료 항목 모두 지우기 (되돌리기 지원)
+- 하위 할일(1단계)
+  - 데스크톱: 카드에 마우스를 올리면 나타나는 도구 모음의 "+" 버튼
+  - 모바일: "+" 버튼 항상 표시
+  - 체크 · 인라인 편집 · 삭제 (제목을 비우고 저장하면 삭제)
+  - 진행도 표시 (예: 2/5), 클릭하면 접기/펼치기
+  - 하위 할일을 모두 체크해도 상위 할일은 자동 완료되지 않음
+- 할일 메뉴 (이동 · 마감일 · 하위 할일 추가 · 삭제)
+  - 데스크톱: "⋯" 버튼 또는 우클릭
+  - 모바일: 카드를 길게 누르기
+- 상태 변경 / 순서 변경
+  - 데스크톱: 카드를 드래그앤드롭
+  - 모바일: 카드 오른쪽 손잡이(≡)를 드래그, 또는 길게 눌러 메뉴에서 이동
 
-2. **뽀모도로 타이머**
-   - 기본 설정: 25분 작업 / 5분 휴식
-   - 사용자 정의 시간 설정 가능
-   - 타이머 일시정지/재개/초기화 기능
-   - 세션별 시간 기록
+### 2. 뽀모도로 타이머
+- 기본 25분 작업 / 5분 휴식, 1~60분 사이로 변경 가능
+- 시작 · 일시정지 · 재개 · 초기화
+- 원형 다이얼을 드래그해 남은 시간 조절 (1분 단위, 실행 중에도 가능)
+- 작업 ↔ 휴식 자동 전환
+- 세션 기록 및 오늘 완료한 🍅 개수 표시
+- 할일과 연결하지 않는 독립 타이머
 
-3. **알람 기능**
-   - 특정 시간 알람 설정
-   - 타이머 종료 알람
-   - 브라우저 알림
+### 3. 알람
+- 할일별 알람 시각 설정 (마감일과 별도)
+- 타이머 종료 시 소리 + 브라우저 알림
 
-4. **데이터 저장**
-   - LocalStorage를 통한 로컬 저장
-   - 페이지 새로고침 후에도 데이터 유지
+### 4. 데이터 저장
+- 모든 변경 사항을 LocalStorage에 즉시 저장
+- 새로고침 후에도 데이터 유지
 
-### 향후 확장 계획
-- Notion API 연동
-- Google Calendar 연동
-- 통계 및 분석 대시보드
-- 협업 기능
+### 5. 기타
+- 다크모드 (기본값은 시스템 설정, 헤더에서 전환 가능)
+- 반응형 레이아웃 (모바일 / 태블릿 / 데스크톱)
 
 ## 🛠️ 기술 스택
 
-- **Frontend**: HTML5, CSS3 (Tailwind CSS), Vanilla JavaScript
-- **Storage**: Browser LocalStorage
-- **Design**: 반응형 디자인 (모바일 / 태블릿 / 데스크톱)
+| 구분 | 사용 기술 |
+|------|-----------|
+| 마크업 / 스타일 | HTML5, Tailwind CSS (Play CDN) |
+| 로직 | Vanilla JavaScript (ES Modules) |
+| 드래그앤드롭 | SortableJS (CDN) |
+| 저장소 | Browser LocalStorage |
+| 배포 | GitHub Pages |
 
-## 🚀 시작하기
+**SortableJS를 선택한 이유:** HTML5 기본 드래그 API는 모바일 터치 환경에서 동작하지 않습니다. 직접 구현하는 대신 검증된 라이브러리를 사용해 안정성을 확보했습니다.
 
-### 설치
+## 🚀 실행 방법
+
+ES Modules를 사용하기 때문에 `index.html`을 더블클릭해서 열면(`file://`) **동작하지 않습니다.** 반드시 로컬 서버로 실행하세요.
+
 ```bash
 git clone <repository-url>
-cd pomodoro-kanban-board
-```
+cd <repository-folder>
 
-### 실행
-브라우저에서 `index.html` 파일을 열면 됩니다.
-
-```bash
-# 간단한 로컬 서버로 실행 (선택사항)
 python -m http.server 8000
 # 또는
 npx http-server
 ```
 
+브라우저에서 `http://localhost:8000` 접속
+
 ## 📁 프로젝트 구조
 
 ```
-pomodoro-kanban-board/
-├── index.html          # 메인 HTML 파일
+├── index.html
 ├── css/
-│   └── styles.css      # 스타일시트 (Tailwind CSS)
-├── js/
-│   ├── app.js          # 메인 애플리케이션 로직
-│   ├── storage.js      # LocalStorage 관리
-│   ├── timer.js        # 뽀모도로 타이머 로직
-│   ├── tasks.js        # 할일 관리 로직
-│   └── ui.js           # UI 업데이트 로직
-├── README.md           # 프로젝트 문서
-└── package.json        # 프로젝트 메타데이터 (선택사항)
+│   └── styles.css      # Tailwind로 처리하기 어려운 스타일만
+└── js/
+    ├── main.js         # 진입점, 초기화
+    ├── store.js        # 상태 관리 + LocalStorage (데이터의 유일한 출입구)
+    ├── board.js        # 칸반 렌더링, 드래그앤드롭
+    ├── taskItem.js     # 할일 카드, 인라인 편집, 하위 할일, 길게 누르기
+    ├── menu.js         # 할일 메뉴 (⋯ 버튼 / 우클릭 / 길게 누르기 공용)
+    ├── date.js         # 날짜 표시 · 마감일 지남 판정
+    ├── toast.js        # 하단 알림 메시지 (삭제 되돌리기 등)
+    ├── timer.js        # 타이머 계산 로직 (DOM 없음)
+    ├── timerDial.js    # 원형 다이얼 UI, 드래그 조작
+    ├── alarm.js        # 할일별 알람, 브라우저 알림
+    └── theme.js        # 다크모드
 ```
+
+## 📊 데이터 구조
+
+노션 데이터베이스 속성(제목, 상태, 날짜, 체크박스)과 1:1로 대응되도록 설계했습니다.
+
+```javascript
+Task {
+  id: string,
+  title: string,
+  status: 'todo' | 'doing' | 'done',
+  order: number,
+  dueDate: 'YYYY-MM-DD' | null,
+  dueTime: 'HH:mm' | null,
+  alarmAt: string (ISO 8601) | null,
+  alarmFired: boolean,
+  subtasks: [{ id, title, done }],
+  collapsed: boolean,          // 하위 할일 접힘 여부 (화면 설정, updatedAt에 반영 안 함)
+  createdAt: string (ISO 8601),
+  updatedAt: string (ISO 8601),
+  completedAt: string (ISO 8601) | null
+}
+
+Session {
+  id: string,
+  type: 'work' | 'break',
+  startedAt: string (ISO 8601),
+  durationSec: number,
+  completed: boolean
+}
+
+Settings {
+  workMin: number,
+  breakMin: number,
+  theme: 'system' | 'light' | 'dark'
+}
+```
+
+저장 데이터에는 `schemaVersion`을 포함해, 이후 구조가 바뀌어도 기존 데이터를 변환할 수 있게 합니다.
 
 ## 🎨 디자인 철학
 
 - **미니멀함**: 불필요한 요소를 제거하고 핵심만 표현
-- **모던함**: 토스, 노션 스타일의 세련된 UI
-- **직관성**: 사용자가 쉽게 이해하고 사용할 수 있는 인터페이스
-- **반응형**: 모든 기기에서 최적의 경험 제공
+- **모던함**: 토스 · 노션의 세련된 UI + Apple "미리알림"의 UX (둥근 카드, 원형 체크박스, 넉넉한 여백)
+- **직관성**: 설명 없이도 쓸 수 있는 인터페이스
+- **반응형**
+  - 데스크톱: 칸반 3컬럼 + 우측 타이머 패널
+  - 태블릿: 칸반 3컬럼 + 상단 타이머
+  - 모바일: 상단 탭으로 컬럼 전환 + 하단 고정 타이머 미니바
 
-## ⌨️ 주요 단축키 (계획)
+## ⚠️ 알려진 한계
 
-- `Ctrl + N`: 새 할일 추가
-- `Ctrl + S`: 저장
-- `Spacebar`: 타이머 시작/일시정지
+- **알람은 브라우저 탭이 열려 있을 때만 동작합니다.** 서버 없이 동작하는 웹 앱의 구조적 한계입니다.
+- 데이터가 브라우저에만 저장되므로, 브라우저 데이터를 지우거나 다른 기기에서 접속하면 데이터가 보이지 않습니다.
 
-## 📊 데이터 구조
+## 🗺️ 개발 로드맵
 
-### Task Object
-```javascript
-{
-  id: string,
-  title: string,
-  description: string,
-  priority: 'high' | 'medium' | 'low',
-  status: 'todo' | 'in-progress' | 'completed',
-  dueDate: string (ISO 8601),
-  timeSpent: number (분 단위),
-  subtasks: Task[],
-  alarmTime: string (HH:mm),
-  createdAt: string (ISO 8601),
-  updatedAt: string (ISO 8601)
-}
-```
+- [x] 1단계: 프로젝트 구조 + 상태 관리(store) + 할일 CRUD
+- [x] 2단계: 드래그앤드롭 + 하위 할일 + 할일 메뉴
+- [ ] 3단계: 뽀모도로 타이머 + 원형 다이얼
+- [ ] 4단계: 할일별 알람 + 브라우저 알림
+- [ ] 5단계: 다크모드 + 반응형 다듬기
+- [ ] 배포: GitHub Pages
+
+### 향후 확장 (검토 중)
+- 노션 내보내기 (JSON / Markdown → Notion API)
+
+### 이번 범위에서 제외
+- 우선순위, 타이머와 할일 연결, 백엔드 / 로그인
 
 ## 🔒 보안 및 개인정보
 
-- 모든 데이터는 로컬 저장소에만 저장됩니다.
+- 모든 데이터는 사용자의 브라우저(LocalStorage)에만 저장됩니다.
 - 서버로 전송되는 데이터가 없습니다.
-- 사용자의 모든 정보는 개인용 컴퓨터에만 저장됩니다.
-
-## 📝 라이센스
-
-MIT License
-
-## 👤 기여
-
-이슈 및 풀 리퀘스트는 언제든 환영합니다!
 
 ---
 
-**마지막 업데이트**: 2026-10-06
+**마지막 업데이트**: 2026-10-07

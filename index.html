@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뽀모도로 칸반보드</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
+  <header class="border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/80">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+      <h1 class="text-lg font-bold tracking-tight">🍅 뽀모도로 칸반보드</h1>
+    </div>
+  </header>
+
+  <main class="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_20rem]">
+    <div class="grid items-start gap-4 md:grid-cols-3">
+      <section class="flex flex-col rounded-2xl bg-neutral-100 p-3 dark:bg-neutral-900">
+        <h2 class="mb-3 flex items-center gap-2 px-1 text-sm font-semibold">
+          <span class="h-2 w-2 rounded-full bg-neutral-400"></span>
+          할 일
+          <span data-overdue="todo" hidden class="rounded-full bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-500 dark:bg-red-500/10"></span>
+          <span data-count="todo" class="ml-auto text-neutral-400"></span>
+        </h2>
+        <ul data-list="todo" data-empty="할일이 없습니다" class="flex min-h-[4.5rem] flex-col gap-2"></ul>
+        <div data-add="todo" class="mt-2">
+          <button type="button" data-add-open class="w-full rounded-xl px-2 py-2 text-left text-sm text-neutral-500 transition hover:bg-neutral-200 dark:hover:bg-neutral-800">+ 새로운 할일</button>
+          <input data-add-input hidden placeholder="할일 입력 후 Enter" class="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400 dark:border-neutral-700 dark:bg-neutral-800">
+        </div>
+      </section>
+
+      <section class="flex flex-col rounded-2xl bg-neutral-100 p-3 dark:bg-neutral-900">
+        <h2 class="mb-3 flex items-center gap-2 px-1 text-sm font-semibold">
+          <span class="h-2 w-2 rounded-full bg-blue-500"></span>
+          진행 중
+          <span data-overdue="doing" hidden class="rounded-full bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-500 dark:bg-red-500/10"></span>
+          <span data-count="doing" class="ml-auto text-neutral-400"></span>
+        </h2>
+        <ul data-list="doing" data-empty="진행 중인 할일이 없습니다" class="flex min-h-[4.5rem] flex-col gap-2"></ul>
+        <div data-add="doing" class="mt-2">
+          <button type="button" data-add-open class="w-full rounded-xl px-2 py-2 text-left text-sm text-neutral-500 transition hover:bg-neutral-200 dark:hover:bg-neutral-800">+ 새로운 할일</button>
+          <input data-add-input hidden placeholder="할일 입력 후 Enter" class="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400 dark:border-neutral-700 dark:bg-neutral-800">
+        </div>
+      </section>
+
+      <section class="flex flex-col rounded-2xl bg-neutral-100 p-3 dark:bg-neutral-900">
+        <h2 class="mb-3 flex items-center gap-2 px-1 text-sm font-semibold">
+          <span class="h-2 w-2 rounded-full bg-orange-500"></span>
+          완료
+          <span class="ml-auto flex items-center gap-3">
+            <button type="button" data-clear-done hidden class="text-xs font-normal text-neutral-400 transition hover:text-red-500">모두 지우기</button>
+            <span data-count="done" class="text-neutral-400"></span>
+          </span>
+        </h2>
+        <ul data-list="done" data-empty="완료된 할일이 없습니다" class="flex min-h-[4.5rem] flex-col gap-2"></ul>
+      </section>
+    </div>
+
+    <aside class="h-fit rounded-2xl border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-400 dark:border-neutral-700">
+      ⏱️ 타이머는 3단계에서 구현됩니다
+    </aside>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
