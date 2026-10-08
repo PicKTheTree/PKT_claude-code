@@ -101,6 +101,6 @@ export function initBoard() {
   document.querySelectorAll('[data-add]').forEach(setupAddForm);
   setupDragAndDrop();
   setupClearDone();
-  subscribe(render);
+  subscribe(['tasks'], render);
   render();
 }

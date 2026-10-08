@@ -30,11 +30,16 @@
   - 모바일: 카드 오른쪽 손잡이(≡)를 드래그, 또는 길게 눌러 메뉴에서 이동
 
 ### 2. 뽀모도로 타이머
-- 기본 25분 작업 / 5분 휴식, 1~60분 사이로 변경 가능
-- 시작 · 일시정지 · 재개 · 초기화
-- 원형 다이얼을 드래그해 남은 시간 조절 (1분 단위, 실행 중에도 가능)
-- 작업 ↔ 휴식 자동 전환
-- 세션 기록 및 오늘 완료한 🍅 개수 표시
+- 기본 25분 작업 / 5분 휴식, 각각 1~60분 사이로 설정 가능
+- 시작 · 일시정지 · 계속 · 초기화 · 건너뛰기, 작업/휴식 탭으로 모드 전환
+- 원형 다이얼 (한 바퀴 = 이번 세션 길이)
+  - 테두리를 드래그해 남은 시간 조절 (1분 단위, 실행 중에도 가능, 이번 세션에만 적용)
+  - 키보드 방향키로 1분씩 조절
+- 작업이 끝나면 휴식 자동 시작 (설정에서 끌 수 있음, 기본 켜짐), 휴식이 끝나면 작업 모드로 대기
+- 종료음 (음원 파일 없이 Web Audio로 생성) + 음소거
+- 새로고침하거나 탭을 닫았다 열어도 타이머가 이어서 진행
+- 브라우저 탭 제목에 남은 시간 표시, 스페이스바로 시작/일시정지
+- 세션 기록 저장 (일시정지 시간 제외), 오늘 집중 시간 표시
 - 할일과 연결하지 않는 독립 타이머
 
 ### 3. 알람
@@ -94,8 +99,10 @@ npx http-server
     ├── backup.js       # JSON 백업 내보내기 / 가져오기
     ├── sampleData.js   # 첫 방문 예시 할일
     ├── toast.js        # 하단 알림 메시지 (삭제 되돌리기 등)
-    ├── timer.js        # 타이머 계산 로직 (DOM 없음)
-    ├── timerDial.js    # 원형 다이얼 UI, 드래그 조작
+    ├── timer.js        # 타이머 계산 · 상태 전환 (DOM 없음)
+    ├── timerDial.js    # 원형 다이얼 그리기, 드래그 · 키보드 입력
+    ├── timerPanel.js   # 타이머 화면 (버튼, 설정, 탭 제목, 스페이스바)
+    ├── sound.js        # 종료음 (Web Audio)
     ├── alarm.js        # 할일별 알람, 브라우저 알림
     └── theme.js        # 다크모드
 ```
@@ -126,16 +133,31 @@ Session {
   id: string,
   type: 'work' | 'break',
   startedAt: string (ISO 8601),
-  durationSec: number,
-  completed: boolean
+  durationSec: number,         // 실제로 돌아간 시간 (일시정지 제외)
+  completed: boolean           // 0초까지 끝났으면 true, 초기화 · 건너뛰기 · 모드 전환은 false
 }
 
 Settings {
   workMin: number,
   breakMin: number,
+  autoStart: boolean,          // 작업이 끝나면 휴식 자동 시작
+  muted: boolean,
   theme: 'system' | 'light' | 'dark'
 }
+
+Timer {                        // 진행 중인 타이머 (새로고침 후 이어가기용)
+  mode: 'work' | 'break',
+  status: 'idle' | 'running' | 'paused',
+  durationSec: number,         // 이번 세션 길이 = 다이얼 한 바퀴
+  remainingSec: number,        // 멈춰 있을 때의 남은 시간
+  endAt: number | null,        // 진행 중일 때의 종료 시각 (ms) → 남은 시간은 여기서 계산
+  startedAt: string | null,
+  runStartedAt: number | null,
+  accumulatedSec: number
+}
 ```
+
+**남은 시간을 1초씩 빼지 않고 종료 시각에서 계산하는 이유:** 브라우저는 백그라운드 탭의 `setInterval`을 느리게 실행합니다. 1초마다 빼는 방식은 다른 탭을 보고 있는 동안 시간이 밀리지만, 종료 시각 방식은 언제 계산해도 정확합니다.
 
 저장 데이터에는 `schemaVersion`을 포함해, 이후 구조가 바뀌어도 기존 데이터를 변환할 수 있게 합니다.
 
@@ -158,7 +180,7 @@ Settings {
 
 - [x] 1단계: 프로젝트 구조 + 상태 관리(store) + 할일 CRUD
 - [x] 2단계: 드래그앤드롭 + 하위 할일 + 할일 메뉴
-- [ ] 3단계: 뽀모도로 타이머 + 원형 다이얼
+- [x] 3단계: 뽀모도로 타이머 + 원형 다이얼
 - [ ] 4단계: 할일별 알람 + 브라우저 알림
 - [ ] 5단계: 다크모드 + 반응형 다듬기
 - [x] 배포: GitHub Pages

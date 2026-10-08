@@ -8,6 +8,10 @@ body {
   display: none !important;
 }
 
+summary::-webkit-details-marker {
+  display: none;
+}
+
 /* SortableJS가 드래그 중에 붙이는 클래스 */
 .sortable-ghost {
   opacity: 0.35;

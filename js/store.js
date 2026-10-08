@@ -6,12 +6,25 @@ const STATUSES = ['todo', 'doing', 'done'];
 
 const now = () => new Date().toISOString();
 
+const DEFAULT_SETTINGS = { workMin: 25, breakMin: 5, autoStart: true, muted: false, theme: 'system' };
+
 function createDefaultState() {
+  const durationSec = DEFAULT_SETTINGS.workMin * 60;
   return {
     schemaVersion: SCHEMA_VERSION,
     tasks: [],
     sessions: [],
-    settings: { workMin: 25, breakMin: 5, theme: 'system' },
+    settings: { ...DEFAULT_SETTINGS },
+    timer: {
+      mode: 'work',
+      status: 'idle',
+      durationSec,
+      remainingSec: durationSec,
+      endAt: null,
+      startedAt: null,
+      runStartedAt: null,
+      accumulatedSec: 0,
+    },
   };
 }
 
@@ -50,7 +63,12 @@ function createSampleState() {
 
 function normalize(saved) {
   const defaults = createDefaultState();
-  return { ...defaults, ...saved, settings: { ...defaults.settings, ...saved.settings } };
+  return {
+    ...defaults,
+    ...saved,
+    settings: { ...defaults.settings, ...saved.settings },
+    timer: { ...defaults.timer, ...saved.timer },
+  };
 }
 
 function load() {
@@ -64,15 +82,20 @@ function load() {
 }
 
 let state = load();
-const listeners = new Set();
 
-function commit() {
+// 영역(scope)별로 알림을 나눠, 타이머가 바뀔 때 보드가 다시 그려지지 않게 한다
+// scope: 'tasks' | 'timer' | 'settings' | 'sessions' | '*'(전체)
+const listeners = new Map();
+
+function commit(scope = 'tasks') {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (error) {
     console.error('데이터를 저장하지 못했습니다.', error);
   }
-  listeners.forEach((listener) => listener());
+  for (const [listener, scopes] of listeners) {
+    if (scope === '*' || scopes.includes(scope)) listener();
+  }
 }
 
 function findTask(id) {
@@ -93,8 +116,8 @@ function topOrder(status) {
   return orders.length ? Math.min(...orders) - 1 : 0;
 }
 
-export function subscribe(listener) {
-  listeners.add(listener);
+export function subscribe(scopes, listener) {
+  listeners.set(listener, scopes);
   return () => listeners.delete(listener);
 }
 
@@ -239,6 +262,33 @@ export function importState(data) {
   validateBackup(data);
   const previous = state;
   state = normalize(structuredClone(data));
-  commit();
+  commit('*');
   return previous;
+}
+
+export function getSettings() {
+  return state.settings;
+}
+
+export function updateSettings(patch) {
+  Object.assign(state.settings, patch);
+  commit('settings');
+}
+
+export function getTimerState() {
+  return state.timer;
+}
+
+export function setTimerState(patch) {
+  Object.assign(state.timer, patch);
+  commit('timer');
+}
+
+export function getSessions() {
+  return state.sessions;
+}
+
+export function addSession(session) {
+  state.sessions.push({ id: crypto.randomUUID(), ...session });
+  commit('sessions');
 }
